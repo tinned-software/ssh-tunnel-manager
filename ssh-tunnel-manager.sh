@@ -1,0 +1,324 @@
+#!/bin/bash
+#
+# @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
+# @copyright Copyright (c) 2013
+version=0.6.0
+# @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
+# @package net
+#
+
+#
+# Ths TUNNEL array is used to configure the individual tunnels. Each 
+# configuration entry needs to follow the SSH options. An example of 
+# how such a configuration line might look like is listed here.
+#
+# TUNNELS=(
+#	"-p 1234 username@host1.example.com -L 10001:127.0.0.1:3306 -L 10011:127.0.0.1:27017"
+#	"-p 1234 username@host2.example.com -L 10002:127.0.0.1:3306 -L 10012:127.0.0.1:27017"
+#)
+
+#
+# The RECONNECT_TIMER is used in case of a tunnel connection to be lost. After 
+# the script is detecting that the connection was lost, the time defined the 
+# time to wait before the the script tries to reconnect the tunnel.
+#
+RECONNECT_TIMER=10
+
+#
+# The LOGFILE setting defines the path of the logfile. You have the possibility to use 
+# the $SCRIPT_PATH variable to define the path of the logfile to be the same 
+# as the script directory.
+#
+LOGFILE=""
+
+#
+# This DBG setting is adding additional details to the logfile. The values are 0 
+# to hide the extra log content and 1 to show it.
+#
+DBG=0
+
+#
+# Default configuration file to load settings from can be defined here.
+#
+DEFAULT_CONFIG="/etc/ssh-tunnel-manager.conf"
+
+#
+# Non Config values
+#
+# Get script directory
+SCRIPT_PATH="$(cd $(dirname $0);pwd -P)"
+LOGFILE="$SCRIPT_PATH/$0.log"
+
+#
+# Parse all parameters
+#
+HELP=0
+TERMINATE=0
+while [ $# -gt 0 ]; do
+	case $1 in
+		# General parameter
+        -h|--help)
+			HELP=1
+			shift
+            ;;
+        -v|--version)
+			echo 
+			echo "Copyright (c) 2013 Tinned-Software (Gerhard Steinbeis)"
+			echo "License GNUv3: GNU General Public License version 3 <http://opensource.org/licenses/GPL-3.0>"
+			echo 
+            echo "`basename $0` version $version"
+            echo
+            exit 0
+            ;;
+
+        # specific parameters
+        --config)
+			# load settings file
+			. $2
+			CONFIG_FILE=$2
+			CONFIG_LOADED=1
+            shift 2
+            ;;
+
+        # specific parameters
+        start)
+            COMMAND='start'
+            shift
+            ;;
+		
+        stop)
+            COMMAND='stop'
+            shift
+            ;;
+		
+        restart)
+            COMMAND='restart'
+            shift
+            ;;
+		
+        status)
+            COMMAND='status'
+            shift
+            ;;
+		
+        show)
+            COMMAND='show'
+            shift
+            ;;
+		
+        manage)
+            COMMAND='manage'
+            INDEX=$2
+            shift 2
+            ;;
+		
+
+		# undefined parameter        
+        *)
+			echo "Unknown option '$1'"
+			HELP=1
+			shift
+			break
+			;;
+    esac
+done
+
+# check if a command has been provided
+if [[ -z "${COMMAND}" ]]; then
+	if [ "$HELP" -ne "1" ]; then
+		echo "ERROR: No command defined in parameter list."
+		HELP=1
+	fi
+fi
+
+# Load the default configuration file if no other configuration file is provided
+if [[ -z "$CONFIG_LOADED" ]]; then
+	# Check if configuration file exists
+	if [[ -f "$DEFAULT_CONFIG" ]]; then
+		. $DEFAULT_CONFIG
+		CONFIG_FILE=$DEFAULT_CONFIG
+	fi
+fi
+
+# check if a tunnel configuration has been provided
+if [[ "${#TUNNELS[@]}" -lt "1" && ! -z "${COMMAND}" ]]; then
+	if [ "$HELP" -ne "1" ]; then
+		echo "ERROR: No tunnel configuration found."
+		HELP=1
+	fi
+fi
+
+# show help message
+if [ "$HELP" -eq "1" ]; then
+	echo 
+	echo "Copyright (c) 2013 Tinned-Software (Gerhard Steinbeis)"
+	echo "License GNUv3: GNU General Public License version 3 <http://opensource.org/licenses/GPL-3.0>"
+	echo 
+	echo "This script is used to setup multiple ssh tunnels and manage to keep "
+	echo "them alive. This script will launch monitoring instances to keep the "
+	echo "individual tunnels alive. See the configuration file for more details "
+	echo "about the configuration."
+	echo 
+	echo "Usage: `basename $0` [-hv] [--config filename.conf] [start|stop|status|restart]"
+  	echo "  -h  --help         print this usage and exit"
+	echo "  -v  --version      print version information and exit"
+    echo "      --config       Configuration file to read parameters from"
+	echo "      start          Start the ssh tunnels configured"
+	echo "      stop           Stop the ssh tunnels configured"
+	echo "      status         Check the status of the ssh tunnels configured"
+	echo "      show           Show the ssh tunnels configured"
+	echo "      restart        Restart the ssh tunnels configured"
+	echo 
+	exit 1
+fi
+
+
+
+#
+# Function to print out a string including a time and date info at the 
+# beginning of the line. If the string is empty, only the timestamp is printed 
+# out.
+#
+# @param $1 The string to print out
+# @param $2 (optional) Option to echo like ">>logfile.log"
+#
+function echotime {
+	TIME=`date "+[%Y-%m-%d %H:%M:%S]"`
+	echo -e "$TIME - $@" >>$LOGFILE
+}
+
+
+# Execute function signal_terminate() receiving TERM signal
+#
+# Function to print out a string including a time and date info at the 
+# beginning of the line. If the string is empty, only the timestamp is printed 
+# out.
+#
+# @param $1 The string to print out
+# @param $2 (optional) Option to echo like ">>logfile.log"
+#
+function signal_terminate {
+	echotime "MANAGER - Received TERM for tunnel ID $INDEX"
+	TERMINATE=1
+}
+trap 'signal_terminate' TERM
+
+SCRIPT_PID=$$
+
+#
+# start procedure according to the action
+#
+case $COMMAND in
+    restart)
+		echotime "COMM - Execute RESTART procedure ... "
+		$0 --config $CONFIG_FILE stop
+		sleep 2
+		$0 --config $CONFIG_FILE start
+		echotime "COMM - Execute RESTART procedure ... Done"
+		echotime ""
+		;;
+
+    stop)
+		echotime "COMM - Execute STOP procedure ... "
+		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+		do
+			# notify "manage" script of terminate request. This avoids the restart of the tunnel
+			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
+			[ "$DBG" -gt "0" ] && echotime "STOP - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\" | awk '{print \$2}'"
+			for PID in $RESULT_PID; do
+				kill $PID &>/dev/null
+			done
+			echotime "STOP - Stop sent manager of tunnel ID $idx ... PID: $RESULT_PID"
+
+			# Terminate the ssh tunnel processes.
+			RESULT_PID=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | awk '{print $2}' | tr '\n' ' '`
+			[ "$DBG" -gt "0" ] && echotime "STOP - *** DBG-CMD: ps aux | grep -v grep | grep \"ssh -N ${TUNNELS[$idx]}\" | awk '{print \$2}'"
+			for PID in $RESULT_PID; do
+				kill $PID &>/dev/null
+			done
+
+			echotime "STOP - Stopped tunnel ID $idx ... PID: $RESULT_PID"
+			
+			# check if the tunnels really down
+			sleep "0.3"
+			TUNNELS_COUNT=0
+			TMANAGER_COUNT=0
+			TUNNELS_COUNT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | awk '{print $2}' | wc -l`
+			TMANAGER_COUNT=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | wc -l`
+			if [[ "$TUNNELS_COUNT" -lt "1" ]] && [[ "$TUNNELS_COUNT" -lt "1" ]]; then
+				echo "Stopping tunnel ID $idx ... Done"
+			else
+				echo "Stopping tunnel ID $idx ... Failed"
+			fi
+        done
+		echotime "COMM - Execute STOP procedure ... Done"
+		echotime ""
+		;;
+
+    status)
+		echotime "COMM - Execute STATUS procedure ... "
+		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+		do
+			# get the list of processs
+			RESULT=0
+        	RESULT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | wc -l`
+        	# show the result
+        	if [[ "$RESULT" -gt "0" ]]; then
+        		echotime "STATUS - Status of Tunnel ID $idx is ... running"
+        		echo "Status of Tunnel ID $idx is ... running"
+        	else
+        		echotime "STATUS - Status of Tunnel ID $idx is ... NOT running"
+        		echo "Status of Tunnel ID $idx is ... NOT running"
+        	fi
+        done
+		echotime "COMM - Execute STATUS procedure ... Done"
+		echotime ""
+        ;;
+
+    show)
+		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+		do
+        	# show the tunnel config
+    		echo "Configuration of Tunnel ID $idx ... ${TUNNELS[$idx]}"
+        done
+        ;;
+
+    start)
+		echotime "COMM - Execute START procedure ... "
+		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+		do
+			RESULT_PID=0
+			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
+			if [[ ! -z $RESULT_PID ]]; then
+				echotime "START - Already running tunnel ID $idx ... PID: $RESULT_PID"
+				echo "Starting tunnel ID $idx ... Already running"
+			else
+				$0 --config $CONFIG_FILE manage $idx &
+				sleep "0.2"
+				RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
+				[ "$DBG" -gt "0" ] && echotime "START - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\" | awk '{print \$2}'"
+				echotime "START - Starting tunnel ID $idx ... PID: $RESULT_PID"
+				echo "Starting tunnel ID $idx ... Done"
+			fi
+			# sleep before every cycle to aviod overloading 
+        done
+		echotime "COMM - Execute START procedure ... Done"
+		echotime ""
+        ;;
+
+    manage)
+		echotime "MANAGE - Connecting tunnel ID $INDEX with parameters ... ${TUNNELS[$INDEX]}"
+		while [ "$TERMINATE" -eq "0" ]
+		do
+		  	SSH_RESULT=`ssh -N ${TUNNELS[$INDEX]} 2>&1`
+		  	if [[ "$TERMINATE" -eq "0" ]]; then
+			  	echotime "MANAGE - Detected tunnel ID $INDEX disconnected. $SSH_RESULT"
+				sleep $RECONNECT_TIMER
+				echotime "MANAGE - Reconnecting tunnel ID $INDEX with parameters ... ${TUNNELS[$INDEX]}"
+			else
+				echotime "MANAGE - Shutdown manager for tunnel ID $INDEX"
+		  	fi
+		done
+		;;
+esac
+
