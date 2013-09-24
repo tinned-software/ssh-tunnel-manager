@@ -2,9 +2,13 @@
 #
 # @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
 # @copyright Copyright (c) 2013
-version=0.6.0
+version=0.6.1
 # @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
 # @package net
+#
+# Configuration file for the ssh-tunnel-manager script. Default location for 
+# the config file is /etc/ssh-tunnel-manager.conf or if that does not exist, 
+# the ssh-tunnel-manager.conf in the same directory as the script itself.
 #
 
 #
@@ -40,7 +44,7 @@ DBG=0
 #
 # Default configuration file to load settings from can be defined here.
 #
-DEFAULT_CONFIG="/etc/ssh-tunnel-manager.conf"
+DEFAULT_CONFIG="ssh-tunnel-manager.conf"
 
 #
 # Non Config values
@@ -74,9 +78,14 @@ while [ $# -gt 0 ]; do
         # specific parameters
         --config)
 			# load settings file
-			. $2
-			CONFIG_FILE=$2
-			CONFIG_LOADED=1
+			if [[ -f "$2" ]]; then
+				. $2
+				CONFIG_FILE=$2
+				CONFIG_LOADED=1
+			else
+				HELP=1
+				echo "ERROR: Specified config file cound not be found." 
+			fi
             shift 2
             ;;
 
@@ -115,7 +124,7 @@ while [ $# -gt 0 ]; do
 
 		# undefined parameter        
         *)
-			echo "Unknown option '$1'"
+			echo "ERROR: Unknown option '$1'"
 			HELP=1
 			shift
 			break
@@ -134,9 +143,14 @@ fi
 # Load the default configuration file if no other configuration file is provided
 if [[ -z "$CONFIG_LOADED" ]]; then
 	# Check if configuration file exists
-	if [[ -f "$DEFAULT_CONFIG" ]]; then
-		. $DEFAULT_CONFIG
-		CONFIG_FILE=$DEFAULT_CONFIG
+	if [[ -f "/etc/$DEFAULT_CONFIG" ]]; then
+		. /etc/$DEFAULT_CONFIG
+		CONFIG_FILE=/etc/$DEFAULT_CONFIG
+	else
+		if [[ -f "$SCRIPT_PATH/$DEFAULT_CONFIG" ]]; then
+			. $SCRIPT_PATH/$DEFAULT_CONFIG
+			CONFIG_FILE=$SCRIPT_PATH/$DEFAULT_CONFIG
+		fi
 	fi
 fi
 
