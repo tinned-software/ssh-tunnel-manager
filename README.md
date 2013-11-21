@@ -13,7 +13,7 @@ This SSH-Tunnel-Manager script aims to setup one or more configured ssh connecti
 
 ## Download & Installation
 
-![image](http://www.tinned-software.net/images/icons/download.png) **[Download Download SSH-Tunnel-Manager from Github](https://github.com/tinned-software/ssh-tunnel-manager)**
+![image](http://www.tinned-software.net/images/icons/download.png) **[Download SSH-Tunnel-Manager from Github](https://github.com/tinned-software/ssh-tunnel-manager)**
 
 To install the the script download it from Github and upload it to your server. Copy the example config file "**ssh-tunnel-manager.conf.example**" to "**ssh-tunnel-manager.conf**" and change its configuration values. The configuration file contains a description for its configuration items. To see the available commandline options execute "ssh-tunnel-manager.ssh -h".
 
