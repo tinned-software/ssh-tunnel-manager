@@ -33,7 +33,7 @@ RECONNECT_TIMER=10
 # the $SCRIPT_PATH variable to define the path of the logfile to be the same 
 # as the script directory.
 #
-LOGFILE="$SCRIPT_PATH/$0.log"
+LOGFILE="$SCRIPT_PATH/ssh-tunnel-manager.log"
 
 #
 # This DBG setting is adding additional details to the logfile. The values are 0 

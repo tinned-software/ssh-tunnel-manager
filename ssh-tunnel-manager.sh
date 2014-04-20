@@ -51,7 +51,7 @@ DEFAULT_CONFIG="ssh-tunnel-manager.conf"
 #
 # Get script directory
 SCRIPT_PATH="$(cd $(dirname $0);pwd -P)"
-LOGFILE="$SCRIPT_PATH/$0.log"
+LOGFILE="$SCRIPT_PATH/ssh-tunnel-manager.log"
 
 #
 # Parse all parameters
