@@ -2,7 +2,7 @@
 #
 # @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
 # @copyright Copyright (c) 2013
-version=0.6.1
+version=0.6.2
 # @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
 # @package net
 #
@@ -58,25 +58,27 @@ LOGFILE="$SCRIPT_PATH/ssh-tunnel-manager.log"
 #
 HELP=0
 TERMINATE=0
+COMMAND_INDEX=''
 while [ $# -gt 0 ]; do
 	case $1 in
 		# General parameter
-        -h|--help)
+		-h|--help)
 			HELP=1
 			shift
-            ;;
-        -v|--version)
+			;;
+
+			-v|--version)
 			echo 
 			echo "Copyright (c) 2013 Tinned-Software (Gerhard Steinbeis)"
 			echo "License GNUv3: GNU General Public License version 3 <http://opensource.org/licenses/GPL-3.0>"
 			echo 
-            echo "`basename $0` version $version"
-            echo
-            exit 0
-            ;;
+			echo "`basename $0` version $version"
+			echo
+			exit 0
+			;;
 
-        # specific parameters
-        --config)
+		# specific parameters
+		--config)
 			# load settings file
 			if [[ -f "$2" ]]; then
 				. $2
@@ -86,50 +88,65 @@ while [ $# -gt 0 ]; do
 				HELP=1
 				echo "ERROR: Specified config file cound not be found." 
 			fi
-            shift 2
-            ;;
+			shift 2
+			;;
 
-        # specific parameters
-        start)
-            COMMAND='start'
-            shift
-            ;;
-		
-        stop)
-            COMMAND='stop'
-            shift
-            ;;
-		
-        restart)
-            COMMAND='restart'
-            shift
-            ;;
-		
-        status)
-            COMMAND='status'
-            shift
-            ;;
-		
-        show)
-            COMMAND='show'
-            shift
-            ;;
-		
-        manage)
-            COMMAND='manage'
-            INDEX=$2
-            shift 2
-            ;;
-		
+		# specific parameters
+		start)
+			COMMAND='start'
+			shift
+			if [[ $# -gt 0 ]]; then
+				COMMAND_INDEX=$1
+				shift
+			fi
+			;;
+
+		stop)
+			COMMAND='stop'
+			shift
+			if [[ $# -gt 0 ]]; then
+				COMMAND_INDEX=$1
+				shift
+			fi
+			;;
+
+		restart)
+			COMMAND='restart'
+			shift
+			if [[ $# -gt 0 ]]; then
+				COMMAND_INDEX=$1
+				shift
+			fi
+			;;
+
+		status)
+			COMMAND='status'
+			shift
+			if [[ $# -gt 0 ]]; then
+				COMMAND_INDEX=$1
+				shift
+			fi
+			;;
+
+		show)
+			COMMAND='show'
+			shift
+			;;
+
+		manage)
+			COMMAND='manage'
+			INDEX=$2
+			shift 2
+			;;
 
 		# undefined parameter        
-        *)
+		*)
 			echo "ERROR: Unknown option '$1'"
 			HELP=1
 			shift
 			break
 			;;
-    esac
+	esac
 done
 
 # check if a command has been provided
@@ -173,15 +190,16 @@ if [ "$HELP" -eq "1" ]; then
 	echo "individual tunnels alive. See the configuration file for more details "
 	echo "about the configuration."
 	echo 
-	echo "Usage: `basename $0` [-hv] [--config filename.conf] [start|stop|status|restart]"
-  	echo "  -h  --help         print this usage and exit"
+	echo "Usage: `basename $0` [-hv] [--config filename.conf] [start|stop|status|restart|show] [tunnel-ID]"
+	echo "  -h  --help         print this usage and exit"
 	echo "  -v  --version      print version information and exit"
-    echo "      --config       Configuration file to read parameters from"
+	echo "      --config       Configuration file to read parameters from"
 	echo "      start          Start the ssh tunnels configured"
 	echo "      stop           Stop the ssh tunnels configured"
-	echo "      status         Check the status of the ssh tunnels configured"
-	echo "      show           Show the ssh tunnels configured"
+	echo "      status         Check the status of the ssh tunnel"
+	echo "      show           Show the ssh tunnel configuration and there tunnel-ID"
 	echo "      restart        Restart the ssh tunnels configured"
+	echo "      tunnel-ID      To start/stop/restart/status one specific tunnel identified by its ID"
 	echo 
 	exit 1
 fi
@@ -225,16 +243,26 @@ SCRIPT_PID=$$
 case $COMMAND in
     restart)
 		echotime "COMM - Execute RESTART procedure ... "
-		$0 --config $CONFIG_FILE stop
+		$0 --config $CONFIG_FILE stop $COMMAND_INDEX
 		sleep 2
-		$0 --config $CONFIG_FILE start
+		$0 --config $CONFIG_FILE start $COMMAND_INDEX
 		echotime "COMM - Execute RESTART procedure ... Done"
 		echotime ""
 		;;
 
-    stop)
+	stop)
 		echotime "COMM - Execute STOP procedure ... "
-		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+
+		# check if a tunnel index has been provided
+		if [[ "$COMMAND_INDEX" != '' ]]; then
+			IDX_START=$COMMAND_INDEX
+			IDX_END=$((COMMAND_INDEX+1))
+		else
+			IDX_START=0
+			IDX_END=${#TUNNELS[@]}
+		fi
+
+		for (( idx=$IDX_START; idx<$IDX_END; idx++ ));
 		do
 			# notify "manage" script of terminate request. This avoids the restart of the tunnel
 			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
@@ -264,42 +292,62 @@ case $COMMAND in
 			else
 				echo "Stopping tunnel ID $idx ... Failed"
 			fi
-        done
+		done
 		echotime "COMM - Execute STOP procedure ... Done"
 		echotime ""
 		;;
 
-    status)
+	status)
 		echotime "COMM - Execute STATUS procedure ... "
-		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+
+		# check if a tunnel index has been provided
+		if [[ "$COMMAND_INDEX" != '' ]]; then
+			IDX_START=$COMMAND_INDEX
+			IDX_END=$((COMMAND_INDEX+1))
+		else
+			IDX_START=0
+			IDX_END=${#TUNNELS[@]}
+		fi
+
+		for (( idx=$IDX_START; idx<$IDX_END; idx++ ));
 		do
 			# get the list of processs
 			RESULT=0
-        	RESULT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | wc -l`
-        	# show the result
-        	if [[ "$RESULT" -gt "0" ]]; then
-        		echotime "STATUS - Status of Tunnel ID $idx is ... running"
-        		echo "Status of Tunnel ID $idx is ... running"
-        	else
-        		echotime "STATUS - Status of Tunnel ID $idx is ... NOT running"
-        		echo "Status of Tunnel ID $idx is ... NOT running"
-        	fi
-        done
+			RESULT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | wc -l`
+			# show the result
+			if [[ "$RESULT" -gt "0" ]]; then
+				echotime "STATUS - Status of Tunnel ID $idx is ... running"
+				echo "Status of Tunnel ID $idx is ... running"
+			else
+				echotime "STATUS - Status of Tunnel ID $idx is ... NOT running"
+				echo "Status of Tunnel ID $idx is ... NOT running"
+			fi
+		done
 		echotime "COMM - Execute STATUS procedure ... Done"
 		echotime ""
-        ;;
+		;;
 
-    show)
+	show)
 		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
 		do
-        	# show the tunnel config
-    		echo "Configuration of Tunnel ID $idx ... ${TUNNELS[$idx]}"
-        done
-        ;;
+			# show the tunnel config
+			echo "Configuration of Tunnel ID $idx ... ${TUNNELS[$idx]}"
+		done
+		;;
 
-    start)
+	start)
 		echotime "COMM - Execute START procedure ... "
-		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
+
+		# check if a tunnel index has been provided
+		if [[ "$COMMAND_INDEX" != '' ]]; then
+			IDX_START=$COMMAND_INDEX
+			IDX_END=$((COMMAND_INDEX+1))
+		else
+			IDX_START=0
+			IDX_END=${#TUNNELS[@]}
+		fi
+
+		for (( idx=$IDX_START; idx<$IDX_END; idx++ ));
 		do
 			RESULT_PID=0
 			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
@@ -315,23 +363,23 @@ case $COMMAND in
 				echo "Starting tunnel ID $idx ... Done"
 			fi
 			# sleep before every cycle to aviod overloading 
-        done
+		done
 		echotime "COMM - Execute START procedure ... Done"
 		echotime ""
-        ;;
+		;;
 
-    manage)
+	manage)
 		echotime "MANAGE - Connecting tunnel ID $INDEX with parameters ... ${TUNNELS[$INDEX]}"
 		while [ "$TERMINATE" -eq "0" ]
 		do
-		  	SSH_RESULT=`ssh -N ${TUNNELS[$INDEX]} 2>&1`
-		  	if [[ "$TERMINATE" -eq "0" ]]; then
-			  	echotime "MANAGE - Detected tunnel ID $INDEX disconnected. $SSH_RESULT"
+			SSH_RESULT=`ssh -N ${TUNNELS[$INDEX]} 2>&1`
+			if [[ "$TERMINATE" -eq "0" ]]; then
+				echotime "MANAGE - Detected tunnel ID $INDEX disconnected. $SSH_RESULT"
 				sleep $RECONNECT_TIMER
 				echotime "MANAGE - Reconnecting tunnel ID $INDEX with parameters ... ${TUNNELS[$INDEX]}"
 			else
 				echotime "MANAGE - Shutdown manager for tunnel ID $INDEX"
-		  	fi
+			fi
 		done
 		;;
 esac
