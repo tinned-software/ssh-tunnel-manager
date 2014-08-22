@@ -318,13 +318,16 @@ case $COMMAND in
 			if [[ "$RESULT" -gt "0" ]]; then
 				echotime "STATUS - Status of Tunnel ID $idx is ... running"
 				echo "Status of Tunnel ID $idx is ... running"
+				EXIT_CODE=0
 			else
 				echotime "STATUS - Status of Tunnel ID $idx is ... NOT running"
 				echo "Status of Tunnel ID $idx is ... NOT running"
+				EXIT_CODE=1
 			fi
 		done
 		echotime "COMM - Execute STATUS procedure ... Done"
 		echotime ""
+		exit $EXIT_CODE
 		;;
 
 	show)
