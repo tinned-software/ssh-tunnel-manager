@@ -309,6 +309,7 @@ case $COMMAND in
 			IDX_END=${#TUNNELS[@]}
 		fi
 
+		EXIT_CODE=0
 		for (( idx=$IDX_START; idx<$IDX_END; idx++ ));
 		do
 			# get the list of processs
@@ -318,7 +319,6 @@ case $COMMAND in
 			if [[ "$RESULT" -gt "0" ]]; then
 				echotime "STATUS - Status of Tunnel ID $idx is ... running"
 				echo "Status of Tunnel ID $idx is ... running"
-				EXIT_CODE=0
 			else
 				echotime "STATUS - Status of Tunnel ID $idx is ... NOT running"
 				echo "Status of Tunnel ID $idx is ... NOT running"
