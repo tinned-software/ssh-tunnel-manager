@@ -203,12 +203,14 @@ if [ "$HELP" -eq "1" ]; then
 	echo "  -h  --help         print this usage and exit"
 	echo "  -v  --version      print version information and exit"
 	echo "      --config       Configuration file to read parameters from"
-	echo "      start          Start the ssh tunnels configured"
-	echo "      stop           Stop the ssh tunnels configured"
-	echo "      status         Check the status of the ssh tunnel"
-	echo "      show           Show the ssh tunnel configuration and there tunnel-ID"
-	echo "      restart        Restart the ssh tunnels configured"
-	echo "      tunnel-ID      To start/stop/restart/status one specific tunnel identified by its ID"
+	echo "      start [TN]     Start the ssh tunnels configured"
+	echo "      stop [TN]      Stop the ssh tunnels configured"
+	echo "      status [TN]    Check the status of the ssh tunnel"
+	echo "      show [TN]      Show the ssh tunnel configuration and there tunnel name"
+	echo "      restart [TN]   Restart the ssh tunnels configured"
+	echo "      "
+	echo "      TN             Specify one tunnel to start/stop/... identified by its name"
+	echo 
 	echo 
 	exit 1
 fi
