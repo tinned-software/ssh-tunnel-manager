@@ -12,7 +12,16 @@
 #
 
 #
-# Ths TUNNEL array is used to configure the individual tunnels. Each 
+# Define names for the tunnel to identify them. The list needs to be configured 
+# in the same order as the tunnel config in the TUNELS list.
+#
+TUNNEL_NAMES=(
+	"Tunnel-A"
+	"Tunnel-B"
+)
+
+#
+# Ths TUNNELS array is used to configure the individual tunnels. Each 
 # configuration entry needs to follow the SSH options. An example of 
 # how such a configuration line might look like is listed here.
 #

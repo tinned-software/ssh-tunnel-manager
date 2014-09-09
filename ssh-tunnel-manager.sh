@@ -2,7 +2,7 @@
 #
 # @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
 # @copyright Copyright (c) 2013
-version=0.6.2
+version=0.6.3
 # @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
 # @package net
 #
@@ -12,7 +12,16 @@ version=0.6.2
 #
 
 #
-# Ths TUNNEL array is used to configure the individual tunnels. Each 
+# Define names for the tunnel to identify them. The list needs to be configured 
+# in the same order as the tunnel config in the TUNELS list.
+#
+TUNNEL_NAMES=(
+	"Tunnel-A"
+	"Tunnel-B"
+)
+
+#
+# Ths TUNNELS array is used to configure the individual tunnels. Each 
 # configuration entry needs to follow the SSH options. An example of 
 # how such a configuration line might look like is listed here.
 #
@@ -58,7 +67,7 @@ LOGFILE="$SCRIPT_PATH/ssh-tunnel-manager.log"
 #
 HELP=0
 TERMINATE=0
-COMMAND_INDEX=''
+COMMAND_INDEX_NAME=''
 while [ $# -gt 0 ]; do
 	case $1 in
 		# General parameter
@@ -96,7 +105,7 @@ while [ $# -gt 0 ]; do
 			COMMAND='start'
 			shift
 			if [[ $# -gt 0 ]]; then
-				COMMAND_INDEX=$1
+				COMMAND_INDEX_NAME=$1
 				shift
 			fi
 			;;
@@ -105,7 +114,7 @@ while [ $# -gt 0 ]; do
 			COMMAND='stop'
 			shift
 			if [[ $# -gt 0 ]]; then
-				COMMAND_INDEX=$1
+				COMMAND_INDEX_NAME=$1
 				shift
 			fi
 			;;
@@ -114,7 +123,7 @@ while [ $# -gt 0 ]; do
 			COMMAND='restart'
 			shift
 			if [[ $# -gt 0 ]]; then
-				COMMAND_INDEX=$1
+				COMMAND_INDEX_NAME=$1
 				shift
 			fi
 			;;
@@ -123,7 +132,7 @@ while [ $# -gt 0 ]; do
 			COMMAND='status'
 			shift
 			if [[ $# -gt 0 ]]; then
-				COMMAND_INDEX=$1
+				COMMAND_INDEX_NAME=$1
 				shift
 			fi
 			;;
@@ -214,9 +223,27 @@ fi
 # @param $1 The string to print out
 # @param $2 (optional) Option to echo like ">>logfile.log"
 #
-function echotime {
+function echotime
+{
 	TIME=`date "+[%Y-%m-%d %H:%M:%S]"`
 	echo -e "$TIME - $@" >>$LOGFILE
+}
+
+#
+# This function will search the index of the name provided to this function.
+#
+function get_id_from_name
+{
+	for (( idx=0; idx<${#TUNNEL_NAMES[@]}; idx++ ))
+	do
+		if [[ "$1" == "${TUNNEL_NAMES[$idx]}" ]]
+		then
+			echo $idx
+			return
+		fi
+	done
+	echo "The tunnel with the name '$NAME' can not be found."
+	exit 1
 }
 
 
@@ -229,8 +256,9 @@ function echotime {
 # @param $1 The string to print out
 # @param $2 (optional) Option to echo like ">>logfile.log"
 #
-function signal_terminate {
-	echotime "MANAGER - Received TERM for tunnel ID $INDEX"
+function signal_terminate
+{
+	echotime "MANAGER - Received TERM for tunnel ${TUNNEL_NAMES[$INDEX]} (ID $INDEX)"
 	TERMINATE=1
 }
 trap 'signal_terminate' TERM
@@ -243,9 +271,9 @@ SCRIPT_PID=$$
 case $COMMAND in
     restart)
 		echotime "COMM - Execute RESTART procedure ... "
-		$0 --config $CONFIG_FILE stop $COMMAND_INDEX
+		$0 --config $CONFIG_FILE stop $COMMAND_INDEX_NAME
 		sleep 2
-		$0 --config $CONFIG_FILE start $COMMAND_INDEX
+		$0 --config $CONFIG_FILE start $COMMAND_INDEX_NAME
 		echotime "COMM - Execute RESTART procedure ... Done"
 		echotime ""
 		;;
@@ -254,7 +282,8 @@ case $COMMAND in
 		echotime "COMM - Execute STOP procedure ... "
 
 		# check if a tunnel index has been provided
-		if [[ "$COMMAND_INDEX" != '' ]]; then
+		if [[ "$COMMAND_INDEX_NAME" != '' ]]; then
+			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
 		else
@@ -270,7 +299,7 @@ case $COMMAND in
 			for PID in $RESULT_PID; do
 				kill $PID &>/dev/null
 			done
-			echotime "STOP - Stop sent manager of tunnel ID $idx ... PID: $RESULT_PID"
+			echotime "STOP - Stop sent manager of tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) ... PID: $RESULT_PID"
 
 			# Terminate the ssh tunnel processes.
 			RESULT_PID=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | awk '{print $2}' | tr '\n' ' '`
@@ -279,7 +308,7 @@ case $COMMAND in
 				kill $PID &>/dev/null
 			done
 
-			echotime "STOP - Stopped tunnel ID $idx ... PID: $RESULT_PID"
+			echotime "STOP - Stopped tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) ... PID: $RESULT_PID"
 			
 			# check if the tunnels really down
 			sleep "0.3"
@@ -288,9 +317,9 @@ case $COMMAND in
 			TUNNELS_COUNT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | awk '{print $2}' | wc -l`
 			TMANAGER_COUNT=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | wc -l`
 			if [[ "$TUNNELS_COUNT" -lt "1" ]] && [[ "$TUNNELS_COUNT" -lt "1" ]]; then
-				echo "Stopping tunnel ID $idx ... Done"
+				echo "Stopping tunnel '${TUNNEL_NAMES[$idx]}' ... Done"
 			else
-				echo "Stopping tunnel ID $idx ... Failed"
+				echo "Stopping tunnel '${TUNNEL_NAMES[$idx]}' ... Failed"
 			fi
 		done
 		echotime "COMM - Execute STOP procedure ... Done"
@@ -301,7 +330,8 @@ case $COMMAND in
 		echotime "COMM - Execute STATUS procedure ... "
 
 		# check if a tunnel index has been provided
-		if [[ "$COMMAND_INDEX" != '' ]]; then
+		if [[ "$COMMAND_INDEX_NAME" != '' ]]; then
+			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
 		else
@@ -317,11 +347,11 @@ case $COMMAND in
 			RESULT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | wc -l`
 			# show the result
 			if [[ "$RESULT" -gt "0" ]]; then
-				echotime "STATUS - Status of Tunnel ID $idx is ... running"
-				echo "Status of Tunnel ID $idx is ... running"
+				echotime "STATUS - Status of Tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) is ... running"
+				echo "Status of Tunnel '${TUNNEL_NAMES[$idx]}' is ... running"
 			else
-				echotime "STATUS - Status of Tunnel ID $idx is ... NOT running"
-				echo "Status of Tunnel ID $idx is ... NOT running"
+				echotime "STATUS - Status of Tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) is ... NOT running"
+				echo "Status of Tunnel '${TUNNEL_NAMES[$idx]}' is ... NOT running"
 				EXIT_CODE=1
 			fi
 		done
@@ -334,7 +364,7 @@ case $COMMAND in
 		for (( idx=0; idx<${#TUNNELS[@]}; idx++ ));
 		do
 			# show the tunnel config
-			echo "Configuration of Tunnel ID $idx ... ${TUNNELS[$idx]}"
+			echo "Configuration of Tunnel '${TUNNEL_NAMES[$idx]}' ... ${TUNNELS[$idx]}"
 		done
 		;;
 
@@ -342,7 +372,8 @@ case $COMMAND in
 		echotime "COMM - Execute START procedure ... "
 
 		# check if a tunnel index has been provided
-		if [[ "$COMMAND_INDEX" != '' ]]; then
+		if [[ "$COMMAND_INDEX_NAME" != '' ]]; then
+			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
 		else
@@ -355,15 +386,15 @@ case $COMMAND in
 			RESULT_PID=0
 			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
 			if [[ ! -z $RESULT_PID ]]; then
-				echotime "START - Already running tunnel ID $idx ... PID: $RESULT_PID"
-				echo "Starting tunnel ID $idx ... Already running"
+				echotime "START - Already running tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) ... PID: $RESULT_PID"
+				echo "Starting tunnel '${TUNNEL_NAMES[$idx]}' ... Already running"
 			else
 				$0 --config $CONFIG_FILE manage $idx &
 				sleep "0.2"
 				RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
 				[ "$DBG" -gt "0" ] && echotime "START - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\" | awk '{print \$2}'"
-				echotime "START - Starting tunnel ID $idx ... PID: $RESULT_PID"
-				echo "Starting tunnel ID $idx ... Done"
+				echotime "START - Starting tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) ... PID: $RESULT_PID"
+				echo "Starting tunnel '${TUNNEL_NAMES[$idx]}' ... Done"
 			fi
 			# sleep before every cycle to aviod overloading 
 		done
@@ -372,16 +403,16 @@ case $COMMAND in
 		;;
 
 	manage)
-		echotime "MANAGE - Connecting tunnel ID $INDEX with parameters ... ${TUNNELS[$INDEX]}"
+		echotime "MANAGE - Connecting tunnel ${TUNNEL_NAMES[$INDEX]} (ID $INDEX) with parameters ... ${TUNNELS[$INDEX]}"
 		while [ "$TERMINATE" -eq "0" ]
 		do
 			SSH_RESULT=`ssh -N ${TUNNELS[$INDEX]} 2>&1`
 			if [[ "$TERMINATE" -eq "0" ]]; then
-				echotime "MANAGE - Detected tunnel ID $INDEX disconnected. $SSH_RESULT"
+				echotime "MANAGE - Detected tunnel '${TUNNEL_NAMES[$INDEX]}' (ID $INDEX) disconnected. $SSH_RESULT"
 				sleep $RECONNECT_TIMER
-				echotime "MANAGE - Reconnecting tunnel ID $INDEX with parameters ... ${TUNNELS[$INDEX]}"
+				echotime "MANAGE - Reconnecting tunnel '${TUNNEL_NAMES[$INDEX]}' (ID $INDEX) with parameters ... ${TUNNELS[$INDEX]}"
 			else
-				echotime "MANAGE - Shutdown manager for tunnel ID $INDEX"
+				echotime "MANAGE - Shutdown manager for tunnel '${TUNNEL_NAMES[$INDEX]}' (ID $INDEX) "
 			fi
 		done
 		;;
