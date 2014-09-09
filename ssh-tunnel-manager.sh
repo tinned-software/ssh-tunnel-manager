@@ -2,7 +2,7 @@
 #
 # @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
 # @copyright Copyright (c) 2013
-version=0.6.3
+version=0.6.4
 # @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
 # @package net
 #
@@ -15,10 +15,10 @@ version=0.6.3
 # Define names for the tunnel to identify them. The list needs to be configured 
 # in the same order as the tunnel config in the TUNELS list.
 #
-TUNNEL_NAMES=(
-	"Tunnel-A"
-	"Tunnel-B"
-)
+#TUNNEL_NAMES=(
+#	"Tunnel-A"
+#	"Tunnel-B"
+#)
 
 #
 # Ths TUNNELS array is used to configure the individual tunnels. Each 
@@ -242,8 +242,7 @@ function get_id_from_name
 			return
 		fi
 	done
-	echo "The tunnel with the name '$NAME' can not be found."
-	exit 1
+	echo -1
 }
 
 
@@ -284,6 +283,10 @@ case $COMMAND in
 		# check if a tunnel index has been provided
 		if [[ "$COMMAND_INDEX_NAME" != '' ]]; then
 			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
+			if [[ "$COMMAND_INDEX" -eq "-1" ]]; then
+				echo "The tunnel with the name '$COMMAND_INDEX_NAME' can not be found."
+				exit 1
+			fi
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
 		else
@@ -332,6 +335,10 @@ case $COMMAND in
 		# check if a tunnel index has been provided
 		if [[ "$COMMAND_INDEX_NAME" != '' ]]; then
 			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
+			if [[ "$COMMAND_INDEX" -eq "-1" ]]; then
+				echo "The tunnel with the name '$COMMAND_INDEX_NAME' can not be found."
+				exit 1
+			fi
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
 		else
@@ -374,6 +381,10 @@ case $COMMAND in
 		# check if a tunnel index has been provided
 		if [[ "$COMMAND_INDEX_NAME" != '' ]]; then
 			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
+			if [[ "$COMMAND_INDEX" -eq "-1" ]]; then
+				echo "The tunnel with the name '$COMMAND_INDEX_NAME' can not be found."
+				exit 1
+			fi
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
 		else
