@@ -24,4 +24,4 @@ Connecting to a service on a server that does not expose the service port or con
 
 With the SSH-Tunnel-Manager multiple SSH connections to different servers with different portforwardings can be configured. These tunnels can be comfortable managed. The script provides a start command to start the tunnels as well as a stop command to stop the running tunnels. The integrated logic will as well automatically restart the ssh tunnel if the connection to the ssh server should be lost.
 
-The SSH-Tunnel-Manager script will establishing a ssh connection for every configured tunnel. Entering the password on every connect can be annoying. I suggest a [SSH passwordless login with SSH key](http://blog.tinned-software.net/ssh-passwordless-login-with-ssh-key/) setup. This allows the script to run without user interaction.
+The SSH-Tunnel-Manager script will establish a ssh connection for every configured tunnel. Entering the password on every connect can be annoying. I suggest a [SSH passwordless login with SSH key](http://blog.tinned-software.net/ssh-passwordless-login-with-ssh-key/) setup. This allows the script to run without user interaction.
