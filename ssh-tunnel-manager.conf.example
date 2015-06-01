@@ -15,20 +15,20 @@
 # Define names for the tunnel to identify them. The list needs to be configured 
 # in the same order as the tunnel config in the TUNELS list.
 #
-TUNNEL_NAMES=(
-	"Tunnel-A"
-	"Tunnel-B"
-)
+#TUNNEL_NAMES=(
+#	"Tunnel-A"
+#	"Tunnel-B"
+#)
 
 #
 # Ths TUNNELS array is used to configure the individual tunnels. Each 
 # configuration entry needs to follow the SSH options. An example of 
 # how such a configuration line might look like is listed here.
 #
- TUNNELS=(
-	"-p 1234 username@host1.example.com -L 10001:127.0.0.1:3306 -L 10011:127.0.0.1:27017"
-	"-p 1234 username@host2.example.com -L 10002:127.0.0.1:3306 -L 10012:127.0.0.1:27017"
-)
+#TUNNELS=(
+#	"-p 1234 username@host1.example.com -L 10001:127.0.0.1:3306 -L 10011:127.0.0.1:27017"
+#	"-p 1234 username@host2.example.com -L 10002:127.0.0.1:3306 -L 10012:127.0.0.1:27017"
+#)
 
 #
 # The RECONNECT_TIMER is used in case of a tunnel connection to be lost. After 
