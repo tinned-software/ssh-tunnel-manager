@@ -32,10 +32,10 @@ TUNNEL_NAMES=(
 
 #
 # The RECONNECT_TIMER is used in case of a tunnel connection to be lost. After 
-# the script is detecting that the connection was lost, the time defined the 
-# time to wait before the the script tries to reconnect the tunnel.
+# the script is detecting that the connection was lost, the time defines the 
+# time to wait in seconds before the the script tries to reconnect the tunnel.
 #
-RECONNECT_TIMER=10
+RECONNECT_TIMER=5
 
 #
 # The LOGFILE setting defines the path of the logfile. You have the possibility to use 

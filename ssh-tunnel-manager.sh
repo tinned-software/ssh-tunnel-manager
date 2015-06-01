@@ -2,7 +2,7 @@
 #
 # @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
 # @copyright Copyright (c) 2013
-version=0.6.4
+version=0.6.5
 # @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
 # @package net
 #
@@ -35,7 +35,7 @@ version=0.6.4
 # the script is detecting that the connection was lost, the time defined the 
 # time to wait before the the script tries to reconnect the tunnel.
 #
-RECONNECT_TIMER=10
+RECONNECT_TIMER=5
 
 #
 # The LOGFILE setting defines the path of the logfile. You have the possibility to use 
@@ -195,7 +195,7 @@ if [ "$HELP" -eq "1" ]; then
 	echo "License GNUv3: GNU General Public License version 3 <http://opensource.org/licenses/GPL-3.0>"
 	echo 
 	echo "This script is used to setup multiple ssh tunnels and manage to keep "
-	echo "them alive. This script will launch monitoring instances to keep the "
+	echo "them alive. This script will launch manager instances to keep the "
 	echo "individual tunnels alive. See the configuration file for more details "
 	echo "about the configuration."
 	echo 
