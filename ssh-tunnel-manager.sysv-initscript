@@ -34,7 +34,7 @@ start() {
 }
 
 stop() {
-    $exec start
+    $exec stop
 }
 
 restart() {
