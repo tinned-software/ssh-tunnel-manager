@@ -38,8 +38,7 @@ stop() {
 }
 
 restart() {
-    stop
-    start
+    $exec restart
 }
 
 rh_status() {

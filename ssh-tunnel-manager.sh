@@ -287,7 +287,7 @@ case $COMMAND in
 			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
 			if [[ "$COMMAND_INDEX" -eq "-1" ]]; then
 				echo "The tunnel with the name '$COMMAND_INDEX_NAME' can not be found."
-				exit 1
+				exit 6
 			fi
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
@@ -339,7 +339,7 @@ case $COMMAND in
 			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
 			if [[ "$COMMAND_INDEX" -eq "-1" ]]; then
 				echo "The tunnel with the name '$COMMAND_INDEX_NAME' can not be found."
-				exit 1
+				exit 3
 			fi
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
@@ -361,7 +361,7 @@ case $COMMAND in
 			else
 				echotime "STATUS - Status of Tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) is ... NOT running"
 				echo "Status of Tunnel '${TUNNEL_NAMES[$idx]}' is ... NOT running"
-				EXIT_CODE=1
+				EXIT_CODE=3
 			fi
 		done
 		echotime "COMM - Execute STATUS procedure ... Done"
@@ -385,7 +385,7 @@ case $COMMAND in
 			COMMAND_INDEX=$(get_id_from_name "$COMMAND_INDEX_NAME")
 			if [[ "$COMMAND_INDEX" -eq "-1" ]]; then
 				echo "The tunnel with the name '$COMMAND_INDEX_NAME' can not be found."
-				exit 1
+				exit 6
 			fi
 			IDX_START=$COMMAND_INDEX
 			IDX_END=$((COMMAND_INDEX+1))
