@@ -1,0 +1,69 @@
+#!/bin/sh
+#
+# ssh-tunnel-manager	Start up the ssh-tunnel-manager manager
+#
+# chkconfig: 2345 60 20
+# description: SSH-Tunnel-Manager to manager multiple SSH connections to different servers.
+#
+# config: /etc/ssh-tunnel-manager.conf
+
+### BEGIN INIT INFO
+# Provides: ssh-tunnel-manager
+# Required-Start: $network sshd
+# Required-Stop: $network sshd
+# Should-Start:
+# Should-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Start up the ssh-tunnel-manager manager
+# Description:       SSH-Tunnel-Manager to manager multiple SSH connections to different servers.
+### END INIT INFO
+
+# Source function library.
+#. /etc/rc.d/init.d/functions
+
+exec="/usr/sbin/ssh-tunnel-manager"
+prog="ssh-tunnel-manager"
+config="/etc/ssh-tunnel-manager.conf"
+
+
+start() {
+    [ -x $exec ] || exit 5
+    [ -f $config ] || exit 6
+    $exec start
+}
+
+stop() {
+    $exec start
+}
+
+restart() {
+    stop
+    start
+}
+
+rh_status() {
+    $exec status
+}
+
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    status)
+        rh_status
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart}"
+        exit 2
+esac
+exit $?

@@ -2,7 +2,7 @@
 #
 # @author Gerhard Steinbeis (info [at] tinned-software [dot] net)
 # @copyright Copyright (c) 2013
-version=0.6.6
+version=0.6.7
 # @license http://opensource.org/licenses/GPL-3.0 GNU General Public License, version 3
 # @package net
 #
@@ -10,25 +10,6 @@ version=0.6.6
 # the config file is /etc/ssh-tunnel-manager.conf or if that does not exist, 
 # the ssh-tunnel-manager.conf in the same directory as the script itself.
 #
-
-# ssh-tunnel-manager	Start up the ssh-tunnel-manager manager
-#
-# chkconfig: 2345 60 20
-# description: SSH-Tunnel-Manager to manager multiple SSH connections to different servers.
-#
-# config: /etc/ssh-tunnel-manager.conf
-
-### BEGIN INIT INFO
-# Provides: ssh-tunnel-manager
-# Required-Start: $network sshd
-# Required-Stop: $network sshd
-# Should-Start:
-# Should-Stop:
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Short-Description: Start up the ssh-tunnel-manager manager
-# Description:       SSH-Tunnel-Manager to manager multiple SSH connections to different servers.
-### END INIT INFO
 
 #
 # Define names for the tunnel to identify them. The list needs to be configured 
