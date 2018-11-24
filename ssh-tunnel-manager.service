@@ -7,6 +7,7 @@ Type=forking
 User=ssh-tunnel-manager
 Group=ssh-tunnel-manager
 ExecStart=/usr/sbin/ssh-tunnel-manager --config /etc/ssh-tunnel-manager.conf start
+ExecStop=/usr/sbin/ssh-tunnel-manager --config /etc/ssh-tunnel-manager.conf stop
 Restart=on-failure
 KillMode=mixed
 KillSignal=SIGTERM
