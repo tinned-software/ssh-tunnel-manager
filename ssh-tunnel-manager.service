@@ -1,0 +1,15 @@
+[Unit]
+Description=SSH Tunnel Manager
+After=networking.target ssh.service
+
+[Service]
+Type=forking
+User=ssh-tunnel-manager
+Group=ssh-tunnel-manager
+ExecStart=/usr/sbin/ssh-tunnel-manager --config /etc/ssh-tunnel-manager.conf start
+Restart=on-failure
+KillMode=mixed
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
