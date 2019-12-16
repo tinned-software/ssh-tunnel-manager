@@ -43,6 +43,7 @@ RECONNECT_TIMER=5
 # as the script directory.
 #
 LOGFILE="/var/log/ssh-tunnel-manager.log"
+#LOGFILE="" #stdout to journald for systemd-system
 
 #
 # This DBG setting is adding additional details to the logfile. The values are 0 
