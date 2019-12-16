@@ -228,7 +228,12 @@ fi
 function echotime
 {
 	TIME=`date "+[%Y-%m-%d %H:%M:%S]"`
-	echo -e "$TIME - $@" >>$LOGFILE
+	if [ -z "$LOGFILE" ]; then
+		#stdout for non-privileged user on systemd
+		echo -e "$TIME - $@"
+	else
+		echo -e "$TIME - $@" >>$LOGFILE
+	fi
 }
 
 #
