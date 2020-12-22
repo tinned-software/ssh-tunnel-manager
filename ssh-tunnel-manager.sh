@@ -304,8 +304,8 @@ case $COMMAND in
 		for (( idx=$IDX_START; idx<$IDX_END; idx++ ));
 		do
 			# notify "manage" script of terminate request. This avoids the restart of the tunnel
-			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
-			[ "$DBG" -gt "0" ] && echotime "STOP - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\" | awk '{print \$2}'"
+			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx\$" | awk '{print $2}' | tr '\n' ' '`
+			[ "$DBG" -gt "0" ] && echotime "STOP - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\\\$\" | awk '{print \$2}'"
 			for PID in $RESULT_PID; do
 				kill $PID &>/dev/null
 			done
@@ -325,7 +325,7 @@ case $COMMAND in
 			TUNNELS_COUNT=0
 			TMANAGER_COUNT=0
 			TUNNELS_COUNT=`ps aux | grep -v grep | grep "ssh -N ${TUNNELS[$idx]}" | awk '{print $2}' | wc -l`
-			TMANAGER_COUNT=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | wc -l`
+			TMANAGER_COUNT=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx\$" | awk '{print $2}' | wc -l`
 			if [[ "$TUNNELS_COUNT" -lt "1" ]] && [[ "$TUNNELS_COUNT" -lt "1" ]]; then
 				echo "Stopping tunnel '${TUNNEL_NAMES[$idx]}' ... Done"
 			else
@@ -402,15 +402,15 @@ case $COMMAND in
 		for (( idx=$IDX_START; idx<$IDX_END; idx++ ));
 		do
 			RESULT_PID=0
-			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
+			RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx\$" | awk '{print $2}' | tr '\n' ' '`
 			if [[ ! -z $RESULT_PID ]]; then
 				echotime "START - Already running tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) ... PID: $RESULT_PID"
 				echo "Starting tunnel '${TUNNEL_NAMES[$idx]}' ... Already running"
 			else
 				$0 --config $CONFIG_FILE manage $idx &
 				sleep "0.2"
-				RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx" | awk '{print $2}' | tr '\n' ' '`
-				[ "$DBG" -gt "0" ] && echotime "START - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\" | awk '{print \$2}'"
+				RESULT_PID=`ps aux | grep -v grep | grep "$0 --config $CONFIG_FILE manage $idx\$" | awk '{print $2}' | tr '\n' ' '`
+				[ "$DBG" -gt "0" ] && echotime "START - *** DBG-CMD: ps aux | grep -v grep | grep \"$0 --config $CONFIG_FILE manage $idx\\\$\" | awk '{print \$2}'"
 				echotime "START - Starting tunnel '${TUNNEL_NAMES[$idx]}' (ID $idx) ... PID: $RESULT_PID"
 				echo "Starting tunnel '${TUNNEL_NAMES[$idx]}' ... Done"
 			fi
